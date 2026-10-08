@@ -1,0 +1,15 @@
+# Local environment variables (contains database keys)
+.env
+.env.local
+
+# Dependencies
+node_modules/
+
+# OS and IDE temporary files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Project Tracker</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <h1>📊 Production Dashboard</h1>
+      <div class="user-info">
+        <span>Welcome, <strong><%= user.full_name %></strong> (<%= user.email %>)</span>
+        <form action="/logout" method="POST" style="display:inline;">
+          <button type="submit" class="btn danger">Logout</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="card">
+        <h3>Create New Project</h3>
+        <form action="/projects" method="POST" class="inline-form">
+          <input type="text" name="title" placeholder="Project name / description" required>
+          <button type="submit" class="btn success">+ Add Project</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h3>Your Active Projects (Neon DB)</h3>
+        <% if (projects.length === 0) { %>
+          <p class="empty">No projects found. Add one above!</p>
+        <% } else { %>
+          <ul class="project-list">
+            <% projects.forEach(project => { %>
+              <li class="project-item">
+                <span class="title"><%= project.title %></span>
+                <span class="badge"><%= project.status %></span>
+                <span class="date"><%= new Date(project.created_at).toLocaleDateString() %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

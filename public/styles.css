@@ -1,0 +1,41 @@
+* 
+{ box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+
+body { 
+    font-family: -apple-system, 
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    background: #0f172a; color: #f8fafc; 
+    padding: 2rem; 
+    min-height: 100vh; 
+}
+.auth-card { 
+    background: #1e293b; 
+    border: 1px solid #334155; 
+    padding: 2rem; 
+    border-radius: 12px; 
+    max-width: 400px; 
+    margin: 4rem auto; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+}
+.form-group { margin-bottom: 1.2rem; }
+label { display: block; margin-bottom: 0.4rem; font-size: 0.875rem; color: #94a3b8; }
+input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 1rem; }
+.btn { padding: 0.75rem 1.2rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+.btn.primary { background: #3b82f6; color: white; width: 100%; }
+.btn.success { background: #10b981; color: white; }
+.btn.danger { background: #ef4444; color: white; }
+.alert { background: #7f1d1d; border: 1px solid #f87171; color: #fca5a5; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.875rem; }
+.container { max-width: 900px; margin: 0 auto; }
+.navbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid #334155; margin-bottom: 2rem; }
+.card { background: #1e293b; border: 1px solid #334155; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.inline-form { display: flex; gap: 1rem; margin-top: 1rem; }
+.inline-form input { flex: 1; }
+.project-list { list-style: none; margin-top: 1rem; }
+.project-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #0f172a; border: 1px solid #334155; border-radius: 6px; margin-bottom: 0.5rem; }
+.badge { background: #0284c7; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; }
+.date { font-size: 0.8rem; color: #64748b; }
+a { color: #38bdf8; text-decoration: none; }
