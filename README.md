@@ -13,7 +13,7 @@
 
 - 🚀 **Live Demo:** [https://your-dashboard-app.vercel.app](https://dashboard-fawn-three-72.vercel.app/login)
 - 📦 **npm Package Used:** [`@maganya/cross-cookie`](https://www.npmjs.com/package/@maganya/cross-cookie)
-- 📖 **Technical Walkthrough Article:** [Read the Medium Deep-Dive](https://medium.com)
+- 📖 **Technical Walkthrough Article:** [Read the Medium Deep-Dive](https://medium.com/@livingstonemaganya/i-tested-my-npm-package-in-a-real-production-stack-0f7ca5f4ad2a)
 
 ---
 
