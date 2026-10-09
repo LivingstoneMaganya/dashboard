@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { parseCookies, serializeCookie } from '@maganya/cross-cookie';
 import { db, initDatabase } from './config/db.js';
@@ -14,6 +15,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,12 +27,31 @@ app.use(express.json());
 
 await initDatabase();
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   const cookies = parseCookies(req.headers.cookie || '');
-  if (cookies['session_user']) {
-    return res.redirect('/dashboard');
+  const sessionToken = cookies['session_token'];
+
+  if (!sessionToken) {
+    return res.redirect('/login');
   }
-  res.redirect('/login');
+
+  if (!db) {
+    return res.status(503).send('Database connection is not configured.');
+  }
+
+  try {
+    const sessions = await db`
+      SELECT sessions.id
+      FROM sessions
+      JOIN users ON users.id = sessions.user_id
+      WHERE sessions.token = ${sessionToken} AND sessions.expires_at > NOW()
+    `;
+
+    return res.redirect(sessions.length > 0 ? '/dashboard' : '/login');
+  } catch (err) {
+    console.error('Session validation error:', err);
+    return res.status(500).send('Authentication service unavailable.');
+  }
 });
 
 app.get('/register', (req, res) => {
@@ -36,19 +60,23 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { email, password, full_name } = req.body;
+  if (typeof email !== 'string' || !email.trim()) {
+    return res.render('register', { error: 'Please enter a valid email address.' });
+  }
+  const normalizedEmail = email.trim().toLowerCase();
 
   if (!db) {
     return res.render('register', { error: 'Database connection is not configured.' });
   }
 
   try {
-    const existing = await db`SELECT id FROM users WHERE email = ${email}`;
+    const existing = await db`SELECT id FROM users WHERE email = ${normalizedEmail}`;
     if (existing.length > 0) {
       return res.render('register', { error: 'Email already registered.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await db`INSERT INTO users (email, password_hash, full_name) VALUES (${email}, ${hashedPassword}, ${full_name})`;
+    await db`INSERT INTO users (email, password_hash, full_name) VALUES (${normalizedEmail}, ${hashedPassword}, ${full_name})`;
 
     res.redirect('/login');
   } catch (err) {
@@ -63,13 +91,17 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  if (typeof email !== 'string' || !email.trim()) {
+    return res.render('login', { error: 'Invalid email or password.' });
+  }
+  const normalizedEmail = email.trim().toLowerCase();
 
   if (!db) {
     return res.render('login', { error: 'Database connection is not configured.' });
   }
 
   try {
-    const users = await db`SELECT * FROM users WHERE email = ${email}`;
+    const users = await db`SELECT * FROM users WHERE email = ${normalizedEmail}`;
     if (users.length === 0) {
       return res.render('login', { error: 'Invalid email or password.' });
     }
@@ -80,16 +112,18 @@ app.post('/login', async (req, res) => {
     if (!match) {
       return res.render('login', { error: 'Invalid email or password.' });
     }
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    await db`
+      INSERT INTO sessions (user_id, token, expires_at)
+      VALUES (${user.id}, ${sessionToken}, NOW() + INTERVAL '24 hours')
+    `;
 
-
-
-    // Use @maganya/cross-cookie to serialize a secure session cookie
-    const sessionCookie = serializeCookie('session_user', user.email, {
-      httpOnly: true, // Prevents XSS script access in browser
+    const sessionCookie = serializeCookie('session_token', sessionToken, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
       path: '/',
-      maxAge: 86400 // 24 hours
+      maxAge: 86400
     });
 
     res.setHeader('Set-Cookie', sessionCookie);
@@ -129,11 +163,31 @@ app.post('/projects', requireAuth, async (req, res) => {
   }
 });
 
-// POST: Logout & Clear Cookie
-app.post('/logout', (req, res) => {
-  const expiredCookie = serializeCookie('session_user', '', { path: '/', maxAge: 0 });
+app.post('/logout', async (req, res) => {
+  const cookies = parseCookies(req.headers.cookie || '');
+  const sessionToken = cookies['session_token'];
+  const expiredCookie = serializeCookie('session_token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    path: '/',
+    maxAge: 0
+  });
   res.setHeader('Set-Cookie', expiredCookie);
-  res.redirect('/login');
+
+  if (!db) {
+    return res.status(503).send('Database connection is not configured.');
+  }
+
+  try {
+    if (sessionToken) {
+      await db`DELETE FROM sessions WHERE token = ${sessionToken}`;
+    }
+    res.redirect('/login');
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).send('Authentication service unavailable.');
+  }
 });
 
 const server = app.listen(PORT, () => {

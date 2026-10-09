@@ -3,9 +3,9 @@ import { db } from '../config/db.js';
 
 export async function requireAuth(req, res, next) {
   const cookies = parseCookies(req.headers.cookie || '');
-  const sessionUserEmail = cookies['session_user'];
+  const sessionToken = cookies['session_token'];
 
-  if (!sessionUserEmail) {
+  if (!sessionToken) {
     return res.redirect('/login');
   }
 
@@ -14,15 +14,20 @@ export async function requireAuth(req, res, next) {
   }
 
   try {
-    const user = await db`SELECT id, email, full_name FROM users WHERE email = ${sessionUserEmail}`;
+    const users = await db`
+      SELECT users.id, users.email, users.full_name
+      FROM sessions
+      JOIN users ON users.id = sessions.user_id
+      WHERE sessions.token = ${sessionToken} AND sessions.expires_at > NOW()
+    `;
 
-    if (user.length === 0) {
-      const expiredCookie = serializeCookie('session_user', '', { path: '/', maxAge: 0 });
+    if (users.length === 0) {
+      const expiredCookie = serializeCookie('session_token', '', { path: '/', maxAge: 0 });
       res.setHeader('Set-Cookie', expiredCookie);
       return res.redirect('/login');
     }
 
-    req.user = user[0];
+    req.user = users[0];
     next();
   } catch (err) {
     console.error('Authentication error:', err);

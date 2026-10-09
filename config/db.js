@@ -34,6 +34,16 @@ export async function initDatabase() {
       )
     `;
 
+    await db`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     console.log('⚡ Neon PostgreSQL tables initialized successfully.');
   } catch (err) {
     console.error('❌ Neon Database connection failed:', err.message);

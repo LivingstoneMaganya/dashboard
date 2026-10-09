@@ -22,7 +22,7 @@
 - **Backend:** Node.js (ES Modules), Express.js
 - **Frontend / Templating:** Vanilla JavaScript, Modern CSS3, EJS
 - **Database:** Serverless PostgreSQL on [Neon](https://neon.tech)
-- **Session Security:** [`@maganya/cross-cookie`](https://www.npmjs.com/package/@maganya/cross-cookie) (Zero-dependency Web Standards cookie parser/serializer)
+- **Session Security:** Random database-backed session tokens in `HttpOnly`, `SameSite=Strict` cookies, parsed and serialized with [`@maganya/cross-cookie`](https://www.npmjs.com/package/@maganya/cross-cookie)
 - **Authentication:** `bcryptjs` for salted password hashing
 - **Hosting & Deployment:** Vercel (Serverless Functions)
 
@@ -30,7 +30,7 @@
 
 ## 🌟 Key Features
 
-- **Zero-Trust Auth Middleware:** Inspects incoming `Cookie` headers using `@maganya/cross-cookie` to verify session state directly against Neon PostgreSQL on every protected route.
+- **Zero-Trust Auth Middleware:** Inspects incoming `session_token` cookies using `@maganya/cross-cookie` and verifies unexpired sessions against Neon PostgreSQL on every protected route.
 - **Hardened Cookie Security:** Issues `HttpOnly`, `SameSite=Strict`, and `Secure` session cookies without requiring heavy legacy middleware dependencies like `cookie-parser`.
 - **Serverless Database Queries:** Uses `@neondatabase/serverless` for instant connection-pooling and automated table initialization on startup.
 - **Responsive UI:** Clean, modern CSS dashboard for managing projects, status badges, and user session controls.
